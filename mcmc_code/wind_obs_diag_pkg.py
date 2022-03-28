@@ -7,28 +7,27 @@ Created on Mon Feb 24 07:52:04 2020
 """
 import os
 import sys
-dat_dir = '/home/yuxuan/wind_obs/wind_data' 
+dat_dir = '/home/yuxuan/wind_obs/wind_data'
 mcmc_dir = '/avatar/yuxuan/wind_obs/mcmc_dat/'
 sys.path.append('/avatar/yuxuan/research_module/despotic')
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+from scipy.optimize import brentq
+import matplotlib.cm as cm
+import matplotlib.colors as colors
+from despotic import emitter
+from despotic.winds import pwind, zetaM, sxMach
+from astropy.io import fits
+from scipy import interpolate
+from scipy.constants import G, c, m_p, m_e, h
+from scipy.constants import k as kB
+from scipy import stats
+from astropy.units import Msun, yr, Angstrom, pc
+import signal
+import time
 # package for wind observational diagnostic with DESPOTIC
 #
-import time
-import signal
-from astropy.units import Msun, yr, Angstrom, pc
-from scipy import stats
-from scipy.constants import k as kB
-from scipy.constants import G, c, m_p, m_e, h
-from scipy import interpolate
-from astropy.io import fits
-from despotic.winds import pwind, zetaM, sxMach
-from despotic import emitter
-import matplotlib.colors as colors
-import matplotlib.cm as cm
-from scipy.optimize import brentq
-from matplotlib.colors import LogNorm
-import matplotlib.pyplot as plt
-import numpy as np
-import sys
 # sys.path.append('%s/research_module'%sys_dir)
 
 # Constants; switch to cgs
@@ -97,7 +96,31 @@ def rotate(ppv, center, angle, n_g):
                 src_x = c*(x-n_g/2) + s*(y-n_g/2) + x0
                 src_y = -s*(x-n_g/2) + c*(y-n_g/2) + y0
                 ppv_rot[:, x, y] = ppv[:, int(src_x), int(src_y)]
+
     return ppv_rot, n_g, n_g
+
+def rotate_2d(pp, center, angle, n_g):
+    # rotate the spatial part of the ppv cube and zoom in
+    # note that n_g should be even
+    (x0, y0) = center
+    pp_rot = np.zeros((n_g, n_g))
+    nx, ny = np.shape(pp)
+    
+    if angle == 0:
+      pp_rot = pp[int(x0-n_g/2):int(x0+n_g/2),
+                  int(y0-n_g/2):int(y0+n_g/2)]
+    elif angle != 0:
+      c = np.cos(angle*np.pi/180.)
+      s = np.sin(angle*np.pi/180.)
+      for x in range(n_g):
+        for y in range(n_g):
+          src_x = int( c*(x-n_g/2) + s*(y-n_g/2) + x0 )
+          src_y = int( -s*(x-n_g/2) + c*(y-n_g/2) + y0 )
+          if 0<=src_x<nx and 0<src_y<ny:
+            pp_rot[x, y] = pp[int(src_x), int(src_y)]
+          else:
+            pp_rot[x, y] = -1 # we do not set it to zero to avoid numerical uncertainty
+    return pp_rot
 
 
 def zeroth_moment_map(v, cube_noise, noise):
@@ -161,7 +184,7 @@ def second_moment_map(v, cube_noise, noise):
 ###################
 
 
-def read_wind_data(obj, line, side, v_cut, v_sm_edge):
+def read_wind_data(obj, line, side, v_cut, v_sm_edge, fov='central'):
     if obj == 'M82':
         if line == 'CO_2_1':
             print('CO')
@@ -208,8 +231,12 @@ def read_wind_data(obj, line, side, v_cut, v_sm_edge):
             HI[HI < 0] = 0
             # rotate the 2D data to make the major axis x axis, and minor axis y axis
             # major axis is oriented at PA=67
-            ppv_rot, n_hi, n_hi = rotate(
-                HI, center=(1000, 1000), angle=0, n_g=300)
+            if fov == 'central':
+                ppv_rot, n_hi, n_hi = rotate(
+                    HI, center=(1000, 1000), angle=0, n_g=300)
+            elif fov == 'full':
+                ppv_rot, n_hi, n_hi = rotate(
+                    HI, center=(1000, 1000), angle=0, n_g=1000)
             cdel_hi = 2.78e-4*60  # in kpc
             # scale of x and y
             ex_hi = cdel_hi*n_hi
@@ -234,20 +261,28 @@ def read_wind_data(obj, line, side, v_cut, v_sm_edge):
                 pos_a_l = [-1.2]*4+[-.8]*5
                 pos_t_l = [-.8, -.4, 0., .4] + [-.8, -.4, 0., .4, .8]
             elif line == 'HI':
-                pos_a_u = [2.0]*5+[1.5]*5+[1.]*5
-                pos_t_u = [-1., -.5, 0., .5, 1.]*3
-                pos_a_l = [-2.]*5+[-1.5]*5+[-1.]*5
-                pos_t_l = [-1., -.5, 0., .5, 1.]*3
-
+                if fov == 'central':
+                    pos_a_u = [2.0]*5+[1.5]*5+[1.]*5
+                    pos_t_u = [-1., -.5, 0., .5, 1.]*3
+                    pos_a_l = [-2.]*5+[-1.5]*5+[-1.]*5
+                    pos_t_l = [-1., -.5, 0., .5, 1.]*3
+                if fov == 'full':
+                    pos_a_u = [6.]+[5.]*4+[4.]*4+[3.]*4
+                    pos_t_u = [-3]+[-3., -1.5, 1.5, 3.]*3
+                    pos_a_l = [-8.]*2+[-7.]*3+[-6.]*3+[-5.]*4+[-4.]*2+[-3.]*4
+                    pos_t_l = [-1.5, 1.5]+[-1.5, 1.5, 3.]+[-1.5, 0., 1.5]+[-3, -1.5, 0., 3.]\
+                              +[-1.5, 1.5] + [-3., -1.5, 0., 1.5]                         
             if side == 'north':
                 pos_t = pos_t_u
                 pos_a = pos_a_u
             elif side == 'south':
                 pos_t = pos_t_l
                 pos_a = pos_a_l
+
             elif side == 'use_for_Halpha':
-                pos_t = [1.05, -1.43]
-                pos_a = [0, 0]
+                pos_t = [0, 0]
+                pos_a = [1.05, -1.43]
+            print(pos_t, pos_a)
             pos_t = np.array(pos_t)
             pos_a = np.array(pos_a)
             pos_iy_a = np.zeros(len(pos_a))
@@ -267,7 +302,7 @@ def read_wind_data(obj, line, side, v_cut, v_sm_edge):
                 if line == 'CO_2_1':
                     spct = np.average(
                         ppv_rot[:, pos_iy-2:pos_iy+2, pos_ix-2:pos_ix+2], axis=(1, 2))
-                if line == 'HI':
+                elif line == 'HI':
                     spct = np.average(
                         ppv_rot[:, pos_iy-11:pos_iy+11, pos_ix-11:pos_ix+11], axis=(1, 2))
                 spct, _, _ = stats.binned_statistic(
@@ -316,45 +351,6 @@ def read_wind_data(obj, line, side, v_cut, v_sm_edge):
             return spct, sigma_spct, v_sm, pos_t, pos_a
 
 
-def log_pcl(theta, theta_2):
-    # log of the prior of clumping factor
-    alpha_ha = 4e-13  # in cgs
-    e_ha = 3.03e-12
-    # surface brightness of the data
-    SB = 4*np.pi*4.008e-5/1.3  # in cgs
-
-    driver, p, ex = theta_2
-    if ex == 'solid':
-        ex = 'solid angle'
-    phi, theta_in, theta_out, lg_mdot, A = theta
-
-    mach = 10**lg_mach
-    phi = phi/90.0*np.pi/2.0
-    theta_in = theta_in/90.0*np.pi/2.0
-    theta_out = theta_out/90.*np.pi/2.0
-    md = 10**lg_mdot
-    md = md*Msun/yr
-    eta = (np.cos(theta_in) - np.cos(theta_out)) * md / mdotstar
-    '''
-    Gamma = brentq(
-            lambda g: zetaM(np.log(g), sxMach(mach))/epsff - eta,
-            1e-6, 100.)
-    '''
-    pw = pwind(Gamma=0.1, mach=mach, driver=driver, potential=p, expansion=ex, geometry='cone sheath',
-               theta=theta_out, theta_in=theta_in, tau0=0,
-               phi=phi, uh=0, fcrit=1.)
-
-    # path length through the wind
-    los = pw.s_crit(1*kpc/r0, 0)
-    L = (los[1] - los[0]) + (los[3] - los[2])
-    # calculate the density derived from clumping factor
-    n_c = np.sqrt(SB/alpha_ha/e_ha/(L*r0)*10**lg_c_rho)
-    #print(L)
-    # volume density of M82 at aout 1 kpc is
-    log_pcl = -(np.log10(n_c) - np.log10(13.))**2 / (2*0.005**2)
-    return log_pcl, n_c
-
-
 # Velocity grid
 def em_line_spec(line, mach, phi=5, theta_in=30, theta_out=50, pos_t=0, pos_a=1, driver='hot', mdot=100, uh=10, tau0=5,
                  expansion='solid', pot='isothermal', fc=1., u=np.linspace(-3, 3, 100)):
@@ -379,7 +375,6 @@ def em_line_spec(line, mach, phi=5, theta_in=30, theta_out=50, pos_t=0, pos_a=1,
         temp = 50.
     elif line == 'HI':
         temp = 5000.
-    print("mach number=", mach)
 
     # create wind object
     try:
@@ -409,6 +404,7 @@ def em_line_spec(line, mach, phi=5, theta_in=30, theta_out=50, pos_t=0, pos_a=1,
             return np.zeros((len(pos_a), len(u))), error
         elif hasattr(pos_a, "__len__") == False:
             return np.zeros(len(u)), error
+    print('Gamma', Gamma)
 
     tw = m0 / mdot
     ###################
@@ -420,9 +416,8 @@ def em_line_spec(line, mach, phi=5, theta_in=30, theta_out=50, pos_t=0, pos_a=1,
         lam_e = 3.9e-25
         # Wavelength grid
         lam0 = 6562.801*ang
-
         Ha = 1e17*2.0/(36.*np.pi) * lam_e * r0 * (rho0/mH)**2 * lam0 / v0 * (tc/tw)**2 \
-            * pw3.Xi(u, varpi=varpi, varpi_t=varpi_t)
+            * pw3.Xi(u=u, varpi=varpi, varpi_t=varpi_t)
         spct = Ha
 
     ###############
@@ -612,22 +607,22 @@ def log_prior(theta, theta_2, line, incl_mach):
 
     if line == 'CO_2_1' or line == 'HI':
         driver, p, ex = theta_2
-    elif line=='Halpha':
+    elif line == 'Halpha':
         driver, p, ex, c_rho = theta_2
 
-    if incl_mach==0:
-        if line == 'CO_2_1' or line=='Halpha':
+    if incl_mach == 0:
+        if line == 'CO_2_1' or line == 'Halpha':
             lg_mach = 2.
         if line == 'HI':
             lg_mach = np.log10(7.4)
 
-    if incl_mach==1:
+    if incl_mach == 1:
         lg_mach = theta[-1]
-        if 0<lg_mach<3:
+        if 0 < lg_mach < 3:
             pass
         else:
             return -np.inf
-        
+
     if driver == 'ideal':
         phi, theta_in, theta_out, lg_mdot = theta[:4]
         if 0.0 < theta_in < 70. and np.max([theta_in+10, 50.]) < theta_out < 90. and -2. < lg_mdot < 3. and -60. < phi < 60.:
@@ -638,24 +633,20 @@ def log_prior(theta, theta_2, line, incl_mach):
 
     elif driver == 'radiation':
         phi, theta_in, theta_out, lg_mdot, tau0 = theta[:5]
-        Gamma = cal_Gamma(lg_mdot=lg_mdot, lg_mach=lg_mach )
+        Gamma = cal_Gamma(lg_mdot=lg_mdot, lg_mach=lg_mach)
         if 0.0 < theta_in < 70. and np.max([theta_in+10, 50.]) < theta_out < 90. and -2. < lg_mdot < 3. and -60. < phi < 60. and 0. < tau0 < 300. and Gamma*tau0 >= 3.:
             prior = np.abs(np.cos(phi*np.pi/180))  # flat over \sin phi
             return np.log(prior)
         else:
             return -np.inf
-    
+
     elif driver == 'hot':
         phi, theta_in, theta_out, lg_mdot, uh = theta[:5]
         if 0.0 < theta_in < 70. and np.max([theta_in+10, 50.]) < theta_out < 90. and -2. < lg_mdot < 3. and -60. < phi < 60. and 0. < uh < 30.:
-            prior = np.abs(np.cos(phi*np.pi/180))  # flat over \sin phi          
+            prior = np.abs(np.cos(phi*np.pi/180))  # flat over \sin phi
             return np.log(prior)
         else:
             return -np.inf
-
-
-
-
 
 
 def log_likelihood(theta, theta_2, line, pos_t, pos_a, v, spct_dat, spct_dat_shift, sigma, side, shift, spct_hi_dat, incl_mach):
@@ -677,26 +668,27 @@ def log_likelihood(theta, theta_2, line, pos_t, pos_a, v, spct_dat, spct_dat_shi
     elif line == 'Halpha':
         driver, p, ex, c_rho = theta_2
         if driver == 'ideal':
-            phi, theta_in, theta_out, lg_mdot, A = theta
+            phi, theta_in, theta_out, lg_mdot, A = theta[:5]
             uh = 1
             tau0 = 1  # arbitrary chosen
         elif driver == 'radiation':
-            phi, theta_in, theta_out, lg_mdot, tau0, A = theta
+            phi, theta_in, theta_out, lg_mdot, tau0, A = theta[:6]
             uh = 0
         elif driver == 'hot':
-            phi, theta_in, theta_out, lg_mdot, uh, A = theta
+            phi, theta_in, theta_out, lg_mdot, uh, A = theta[:6]
             tau0 = 0
 
-    if incl_mach==0:
-        if line=='CO_2_1':
+    if incl_mach == 0:
+        if line == 'CO_2_1':
             mach = 100
-        elif line=='HI':
+        elif line == 'HI':
             mach = 7.4
-        elif line=='Halpha':
-            mach = 100         
-    elif incl_mach==1:
+        elif line == 'Halpha':
+            mach = 100
+    elif incl_mach == 1:
         lg_mach = theta[-1]
         mach = 10**lg_mach
+    print(theta)
 
     f_A = np.cos(theta_in/90.0*np.pi/2.0) - np.cos(theta_out/90.0*np.pi/2.0)
     mdot = 10**lg_mdot/f_A  # isotropic mass outflow rate
@@ -707,10 +699,12 @@ def log_likelihood(theta, theta_2, line, pos_t, pos_a, v, spct_dat, spct_dat_shi
     # make spectrum
     u = v*1.0e5/v0  # dimensionless velocity
     if line == 'CO_2_1' or line == 'HI':
-        spct, error = em_line_spec(line=line, mach=mach, phi=phi, theta_in=theta_in, theta_out=theta_out, pos_t=pos_t, pos_a=pos_a, driver=driver, mdot=mdot, uh=uh, tau0=tau0, expansion=ex, pot=p, fc=1., u=u)
+        spct, error = em_line_spec(line=line, mach=mach, phi=phi, theta_in=theta_in, theta_out=theta_out,
+                                   pos_t=pos_t, pos_a=pos_a, driver=driver, mdot=mdot, uh=uh, tau0=tau0, expansion=ex, pot=p, fc=1., u=u)
 
     elif line == 'Halpha':
-        spct_ha, error = em_line_spec(line=line, mach=mach, phi=phi, theta_in=theta_in, theta_out=theta_out, pos_t=pos_t, pos_a=pos_a, driver=driver, mdot=mdot, uh=uh, tau0=tau0, expansion=ex, pot=p, fc=1., u=u)
+        spct_ha, error = em_line_spec(line=line, mach=mach, phi=phi, theta_in=theta_in, theta_out=theta_out,
+                                      pos_t=pos_t, pos_a=pos_a, driver=driver, mdot=mdot, uh=uh, tau0=tau0, expansion=ex, pot=p, fc=1., u=u)
         if side == 'north':
             spct_hi = spct_hi_dat[0]
         else:
@@ -725,7 +719,7 @@ def log_likelihood(theta, theta_2, line, pos_t, pos_a, v, spct_dat, spct_dat_shi
         print('not converge')
         spct[spct != spct] = 0  # make NaN value to be 0
         filename = '/avatar/yuxuan/wind_obs/mcmc_dat/non_converge_points/%s/%s/%s_%s_%s_%s_non_converge_points.txt' % (
-              side, line, line, driver, p, ex) 
+            side, line, line, driver, p, ex)
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, 'ab') as f:
             np.savetxt(f, [theta], fmt='%5f', delimiter=',')
@@ -756,10 +750,9 @@ def log_likelihood(theta, theta_2, line, pos_t, pos_a, v, spct_dat, spct_dat_shi
             # for each position minimize the kaisq along axis of velocity shift, delta 1D array position
             delta = np.min(delta_a)
             delta_sum = delta**2/sigma**2
-        elif shift ==  False:
+        elif shift == False:
             delta_sum = np.mean((spct-spct_dat)**2 / sigma**2)
         kaisq = -0.5 * delta_sum
-    print('kaisq=%f' % kaisq)
     return kaisq
 
 
