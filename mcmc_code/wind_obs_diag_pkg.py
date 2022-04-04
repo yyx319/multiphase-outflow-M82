@@ -351,6 +351,51 @@ def read_wind_data(obj, line, side, v_cut, v_sm_edge, fov='central'):
 
             return spct, sigma_spct, v_sm, pos_t, pos_a
 
+def read_wind_spectra_data(obj, line, side, fov='central'):
+  v_r = 250
+  v_l = -250
+  v_sm_edge = np.linspace(v_l, v_r, 51)
+  v_sm = (v_sm_edge[:-1]+v_sm_edge[1:])/2
+  if obj == 'M82':
+    if line == 'CO_2_1':
+      print('CO')
+      sigma = 0.007  # the cube has rms noise per 5.2 km s-1 channel of 7 mK in units of main beam temperature
+      sigma_spct = sigma/np.sqrt(5**2/2.5**2/np.pi)
+      pos_a_u = [1.2]*4+[0.8]*5
+      pos_t_u = [-.8, -.4, 0., .8] + [-.8, -.4, 0., .4, .8]
+      pos_a_l = [-1.2]*4+[-.8]*5
+      pos_t_l = [-.8, -.4, 0., .4] + [-.8, -.4, 0., .4, .8]
+
+    elif line == 'HI':
+      print('HI')
+      sigma = 0.4
+      sigma_spct = sigma/np.sqrt(23**2/12**2/np.pi)
+      if fov == 'central':
+        pos_a_u = [2.0]*5+[1.5]*5+[1.]*5
+        pos_t_u = [-1., -.5, 0., .5, 1.]*3
+        pos_a_l = [-2.]*5+[-1.5]*5+[-1.]*5
+        pos_t_l = [-1., -.5, 0., .5, 1.]*3
+      if fov == 'full':
+        pos_a_u = [6.]+[5.]*4+[4.]*4+[3.]*4
+        pos_t_u = [-3]+[-3., -1.5, 1.5, 3.]*3
+        pos_a_l = [-8.]*2+[-7.]*3+[-6.]*3+[-5.]*4+[-4.]*2+[-3.]*4
+        pos_t_l = [-1.5, 1.5]+[-1.5, 1.5, 3.]+[-1.5, 0., 1.5]+[-3, -1.5, 0., 3.]+[-1.5, 1.5] + [-3., -1.5, 0., 1.5]
+  if side == 'north':
+    pos_t = pos_t_u
+    pos_a = pos_a_u
+  elif side == 'south':
+    pos_t = pos_t_l
+    pos_a = pos_a_l
+  elif line=='HI' and side == 'use_for_Halpha':
+    pos_t = [0, 0]
+    pos_a = [1.05, -1.43]
+  print(pos_t, pos_a)
+  pos_t = np.array(pos_t)
+  pos_a = np.array(pos_a)
+
+  spct_dat = np.loadtxt("%s/%s/%s_spct_%s_%s.txt"%(dat_dir, obj, line, side, fov))
+  spct_dat = np.array(spct_dat)
+  return spct_dat, sigma_spct, v_sm, pos_t, pos_a
 
 # Velocity grid
 def em_line_spec(line, mach, phi=5, theta_in=30, theta_out=50, pos_t=0, pos_a=1, driver='hot', mdot=100, uh=10, tau0=5,
