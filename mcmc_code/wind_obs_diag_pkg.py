@@ -310,7 +310,8 @@ def read_wind_data(obj, line, side, v_cut, v_sm_edge, fov='central'):
                 spct_dat.append(spct)
             v_sm = (v_sm_edge[:-1]+v_sm_edge[1:])/2
             spct_dat = np.array(spct_dat)
-
+            np.savetxt("%s/%s/%s_spct_%s_%s.txt"%(dat_dir, obj, line, side, fov), spct_dat)
+            
             # velocity cutoff
             if v_cut != 0:
                 vcl_i = abs(v+v_cut).argmin()
