@@ -25,6 +25,9 @@ print('%s map'%fov )
 dm_a = ['ideal','radiation','hot']#, 'radiation','hot'] #['ideal','radiation','hot']
 p_a = ['point', 'isothermal']
 ex_a= ['area','intermediate','solid']#, 'intermediate', 'solid']#['area', 'intermediate', 'solid']
+dm2_a =  ['Ideal','Radiation','Hot gas']
+p2_a = ['Point', 'Isothermal']
+ex2_a = ['Area','Intermediate','Solid']
 
 AIC_a = np.zeros( (len(dm_a), len(p_a), len(ex_a) ) )
 par_a = np.zeros( (len(dm_a), len(p_a), len(ex_a), 7 ) )
@@ -103,12 +106,12 @@ with open('%s_%s_best_fit_par.txt'%(side, line), 'wb') as f:
   if line=='CO_2_1' or line=='HI':
     np.savetxt(f, [[' Dm ', ' Pot ', ' Exp law ', ' $w$ ',' $\\phi$ ', ' $\\theta_{\\rm in}$ ', ' $\\theta_{\\rm out}$ ', '$ \\log \\Dot{M} $', '\\log \\mathcal{M}' , ' $\\tau_0$ ', ' $u_h$ \\\\',]], fmt='%5s', delimiter='&')
 
-for i, dm in enumerate(dm_a):
-  for j, p in enumerate(p_a):
-    for k, ex in enumerate(ex_a):
+for i, dm in enumerate(dm2_a):
+  for j, p in enumerate(p2_a):
+    for k, ex in enumerate(ex2_a):
       print('%s_%s_%s'%(dm, p, ex))
       with open('%s_%s_best_fit_par.txt'%(side, line), 'ab') as f:
-        if dm=='ideal':
+        if dm=='Ideal':
           np.savetxt(f, [[' %s '%dm if j==0 and k==0 else ' ', ' %s '%p if k==0 else ' ',
                           ' %s '%ex, ' %.2f '%w_nor[i,j,k] if w_nor[i,j,k]>=5e-3 else ' 0 ',
                           ' $%.2f_{-%.2f}^{+%.2f}$ '%(par_a[i,j,k,0], spar1_a[i,j,k,0], spar2_a[i,j,k,0]),
@@ -117,7 +120,7 @@ for i, dm in enumerate(dm_a):
                           ' $%.2f_{-%.2f}^{+%.2f}$ '%(par_a[i,j,k,3], spar1_a[i,j,k,3], spar2_a[i,j,k,3]),
                           ' $%.2f_{-%.2f}^{+%.2f}$ '%(par_a[i,j,k,4], spar1_a[i,j,k,4], spar2_a[i,j,k,4]),
                           ' - ', ' - \\\\']], fmt='%5s', delimiter='&')
-        elif dm=='radiation':
+        elif dm=='Radiation':
           np.savetxt(f, [[' %s '%dm if j==0 and k==0 else ' ', ' %s '%p if k==0 else ' ',
                           ' %s '%ex, ' %.2f '%w_nor[i,j,k] if w_nor[i,j,k]>=5e-3 else ' 0 ',
                           ' $%.2f_{-%.2f}^{+%.2f}$ '%(par_a[i,j,k,0], spar1_a[i,j,k,0], spar2_a[i,j,k,0]),
@@ -127,8 +130,7 @@ for i, dm in enumerate(dm_a):
                           ' $%.2f_{-%.2f}^{+%.2f}$ '%(par_a[i,j,k,5], spar1_a[i,j,k,5], spar2_a[i,j,k,5]),
                           ' $%.2f_{-%.2f}^{+%.2f}$ '%(par_a[i,j,k,4], spar1_a[i,j,k,4], spar2_a[i,j,k,4]),
                           ' - \\\\']], fmt='%5s', delimiter='&')
-        elif dm=='hot':
-          dm2='hot gas'
+        elif dm=='Hot gas':
           np.savetxt(f, [[' %s '%dm2 if j==0 and k==0 else ' ', ' %s '%p if k==0 else ' ',
                           ' %s '%ex, ' %.2f '%w_nor[i,j,k] if w_nor[i,j,k]>=5e-3 else ' 0 ',
                           ' $%.2f_{-%.2f}^{+%.2f}$ '%(par_a[i,j,k,0], spar1_a[i,j,k,0], spar2_a[i,j,k,0]),
