@@ -446,7 +446,23 @@ if comp_moment==1:
   m2[m2==0]=np.nan
   m0_despotic, m1_despotic, m2_despotic = wodp.second_moment_map(v, T_B_ppv, noise=0)
   m1_despotic[m1_despotic==0]=np.nan; m2_despotic[m2_despotic==0]=np.nan
-
+  
+  np.savetxt('figure_pub/%s_%s_m0.txt'%(line, side), m0)
+  np.savetxt('figure_pub/%s_%s_m1.txt'%(line, side), m1)
+  np.savetxt('figure_pub/%s_%s_m2.txt'%(line, side), m2)
+  np.savetxt('figure_pub/%s_%s_m0_mod.txt'%(line, side), m0_despotic)
+  np.savetxt('figure_pub/%s_%s_m1_mod.txt'%(line, side), m1_despotic)
+  np.savetxt('figure_pub/%s_%s_m2_mod.txt'%(line, side), m2_despotic)
+  
+  if os.path.exists('figure_pub/%s_%s_m0.txt'%(line, side) ):
+    m0=np.loadtxt('figure_pub/%s_%s_m0.txt'%(line, side))
+    m1=np.loadtxt('figure_pub/%s_%s_m1.txt'%(line, side))
+    m2=np.loadtxt('figure_pub/%s_%s_m2.txt'%(line, side))
+    m0_despotic=np.loadtxt('figure_pub/%s_%s_m0_mod.txt'%(line, side))
+    m1_despotic=np.loadtxt('figure_pub/%s_%s_m1_mod.txt'%(line, side))
+    m2_despotic=np.loadtxt('figure_pub/%s_%s_m2_mod.txt'%(line, side))
+  
+  
   extent = [-sp_r,sp_r, 0, sp_r ]
   row = 2; col=3;
   fig, axs = plt.subplots(row, col, figsize=(16,5) )#, sharex=True, sharey=True, tight_layout=True, gridspec_kw = {'wspace':0.05, 'hspace':0.00})
