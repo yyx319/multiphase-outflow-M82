@@ -1,0 +1,2 @@
+During this research, the wind repository in DESPOTIC package is developed significantly by Prof Mark Krumholz.
+The code development includes all the commits from 2020-04-29 to 2021-11-29 described in https://bitbucket.org/krumholz/despotic/commits/.
