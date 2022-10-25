@@ -32,7 +32,7 @@ where central is field of view
 
 plot_pub.py: Make publishable plots, including comarison of spectra, moment map. Ex:
     python plot_pub.py HI north ideal point area best
-wh  ere best is selection policy
+where best is selection policy
 
 
 
