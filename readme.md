@@ -47,6 +47,7 @@ where best is selection policy.
 
 Appendix:
 
+The test folder include the code used for debugging.
 
 
 
