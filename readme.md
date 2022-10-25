@@ -3,7 +3,7 @@ This repository contains the code used for the analysis described in Yuan, Krumh
 The code is quite extendable and can be used to study the properties of multi-phase outflow in other galaxies. We attach a simple user guide for this suite of code. 
 
 User guide
-There are three main steps to extend the code to analyse other observations: I. import data II. MCMC fitting III. Analyse the results
+There are three main steps to extend the code to analyse other observations: I. import data II. MCMC fitting III. Analyse the results. Before running the code, we first need to spcify the directory of DESPOTIC code, observational data, and MCMC output in wind_mcmc_fit.py and wind_obs_diag_pkg.py.
 
 I. Import observation data
 
@@ -12,8 +12,6 @@ The function read_data in wind_obs_diag_pkg.py defines how we read in the data a
 II. MCMC fitting
 
 wind_mcmc_fit.py: this MCMC fitting module includes CO (2-1), HI 21cm, and Halpha line by default. If you would like to add emission lines of your choice, add some code for generating the spectra for that line in function em_line_spec in wind_obs_diag_pkg.py. Please refer to the DESPOTIC document https://despotic.readthedocs.io/en/latest/ for the details of how to implement this. Note that hot gas driven wind requires tabulate table. Please contact mark.krumholz@anu.edu.au for those tables.
-
-Spcify the directory of DESPOTIC code, observational data, as well as MCMC output
 
 Example of using the code:
 
