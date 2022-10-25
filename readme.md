@@ -1,4 +1,4 @@
-This repository contains the code used for the analysis described in Yuan, Krumholz & Martin 2022. The code use the DESPOTIC code to constrain the physical properties of galactic wind. Full description of DESPOTIC and model is in https://bitbucket.org/krumholz/despotic/src/master/, https://despotic.readthedocs.io/en/latest/ and https://ui.adsabs.harvard.edu/abs/2017MNRAS.471.4061K/abstract. More detailed guidance can be found in the website https://yyx319.github.io/multiphase-outflow-M82/
+This repository contains the code used for the analysis described in Yuan, Krumholz & Martin 2022. The code use the DESPOTIC code to constrain the physical properties of galactic wind. Full description of DESPOTIC and model is in https://bitbucket.org/krumholz/despotic/src/master/, https://despotic.readthedocs.io/en/latest/ and https://ui.adsabs.harvard.edu/abs/2017MNRAS.471.4061K/abstract. 
 
 The code is quite extendable and can be used to study the properties of multi-phase outflow in other galaxies. We attach a simple user guide for this suite of code. 
 
@@ -27,10 +27,12 @@ III. Analyse the results
 Three python routines for analyse the results are listed below:
 
 comp_models.py: Distinguish different set of models characterised by different driving mechanisms, potential and expansion law.
+Ex: python comp_model.py CO_2_1 north central
+where central is field of view
 
-comp_obs_th.py: Compare the theroretical spectra to observed spectra, for a single set of model of (dm, p, ex).
-
-plot_pub.py: Make publishable plots.
+plot_pub.py: Make publishable plots, including comarison of spectra, moment map.
+python plot_pub.py HI north ideal point area best
+where best is selection policy
 
 
 
