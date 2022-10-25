@@ -7,7 +7,7 @@ There are three main steps to extend the code to analyse other observations: I. 
 
 I. Import observation data
 
-The function read_data in wind_obs_diag_pkg.py defines how we read in the data and select a sample of spectra for comparison.
+The function read_data in wind_obs_diag_pkg.py defines how we read in the data and select a sample of spectra for comparison. Example jupyter notebooks for visualizing observation data of multiphase winds reside in Analysis folder.
 
 II. MCMC fitting
 
@@ -42,7 +42,11 @@ plot_pub.py: Make publishable plots, including comarison of spectra, moment map.
 
     python plot_pub.py HI north ideal point area best
     
-where best is selection policy
+where best is selection policy.
+
+
+Appendix:
+
 
 
 
