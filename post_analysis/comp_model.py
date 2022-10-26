@@ -131,7 +131,7 @@ for i, dm in enumerate(dm2_a):
                           ' $%.2f_{-%.2f}^{+%.2f}$ '%(par_a[i,j,k,4], spar1_a[i,j,k,4], spar2_a[i,j,k,4]),
                           ' - \\\\']], fmt='%5s', delimiter='&')
         elif dm=='Hot gas':
-          np.savetxt(f, [[' %s '%dm2 if j==0 and k==0 else ' ', ' %s '%p if k==0 else ' ',
+          np.savetxt(f, [[' %s '%dm if j==0 and k==0 else ' ', ' %s '%p if k==0 else ' ',
                           ' %s '%ex, ' %.2f '%w_nor[i,j,k] if w_nor[i,j,k]>=5e-3 else ' 0 ',
                           ' $%.2f_{-%.2f}^{+%.2f}$ '%(par_a[i,j,k,0], spar1_a[i,j,k,0], spar2_a[i,j,k,0]),
                           ' $%.2f_{-%.2f}^{+%.2f}$ '%(par_a[i,j,k,1], spar1_a[i,j,k,1], spar2_a[i,j,k,1]),
