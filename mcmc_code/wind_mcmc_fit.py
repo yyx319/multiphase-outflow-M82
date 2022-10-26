@@ -127,61 +127,54 @@ if line == 'CO_2_1' or line == 'HI':
     if incl_mach == 0:
         if driver == 'ideal':
             ndim = 4
-            pos = np.array([0, 30, 60, 0.8]) + np.array([10, 5,
-                                                         8, 0.2]) * np.random.randn(nwalkers, ndim)
+            pos = np.array([0, 30, 60, 0.8]) + np.array([10, 5, 8, 0.2]) * np.random.randn(nwalkers, ndim)
         elif driver == 'radiation':
             ndim = 5
-            pos = np.array([0, 30, 60, 0.8, 60]) + np.array([10,
-                                                             5, 8, 0.2, 5]) * np.random.randn(nwalkers, ndim)
+            pos = np.array([0, 30, 60, 0.8, 60]) + np.array([10, 5, 8, 0.2, 5]) * np.random.randn(nwalkers, ndim)
         elif driver == 'hot':
             ndim = 5
-            pos = np.array([0, 30, 60, 0.8, 10]) + np.array([10,
-                                                             5, 8, 0.2, 1]) * np.random.randn(nwalkers, ndim)
+            pos = np.array([0, 30, 60, 0.8, 10]) + np.array([10, 5, 8, 0.2, 1]) * np.random.randn(nwalkers, ndim)
     elif incl_mach == 1:
         if driver == 'ideal':
             ndim = 5
-            pos = np.array([0, 30, 60, 0.8, 1.5]) + np.array([10,
-                                                              5, 8, 0.2, .5]) * np.random.randn(nwalkers, ndim)
+            pos = np.array([0, 30, 60, 0.8, 1.5]) + np.array([10, 5, 8, 0.2, .5]) * np.random.randn(nwalkers, ndim)
         elif driver == 'radiation':
             ndim = 6
-            pos = np.array([0, 30, 60, 0.8, 60, 1.5]) + np.array([10,
-                                                                  5, 8, 0.2, 5, .5]) * np.random.randn(nwalkers, ndim)
+            pos = np.array([0, 30, 60, 0.8, 60, 1.5]) + np.array([10, 5, 8, 0.2, 5, .5]) * np.random.randn(nwalkers, ndim)
         elif driver == 'hot':
             ndim = 6
-            pos = np.array([0, 30, 60, 0.8, 10, 1.5]) + np.array([10,
-                                                                  5, 8, 0.2, 1, .5]) * np.random.randn(nwalkers, ndim)
+            pos = np.array([0, 30, 60, 0.8, 10, 1.5]) + np.array([10, 5, 8, 0.2, 1, .5]) * np.random.randn(nwalkers, ndim)
 elif line == 'Halpha':
     if incl_mach == 0:
         if driver == 'ideal':
             ndim = 5
-            pos = np.array([0, 30, 60, 0.8, .5]) + np.array([10,
-                                                             5, 8, 0.2, 0.1]) * np.random.randn(nwalkers, ndim)
+            pos = np.array([0, 30, 60, 0.8, .5]) + np.array([10, 5, 8, 0.2, 0.1]) * np.random.randn(nwalkers, ndim)
         elif driver == 'radiation':
             ndim = 6
-            pos = np.array([0, 30, 60, 0.8, 60, .5]) + np.array([10,
-                                                                 5, 8, 0.2, 5, 0.1]) * np.random.randn(nwalkers, ndim)
+            pos = np.array([0, 30, 60, 0.8, 60, .5]) + np.array([10, 5, 8, 0.2, 5, 0.1]) * np.random.randn(nwalkers, ndim)
         elif driver == 'hot':
             ndim = 6
-            pos = np.array([0, 30, 60, 0.8, 10, .5]) + np.array([10,
-                                                                 5, 8, 0.2, 1, 0.1]) * np.random.randn(nwalkers, ndim)
+            pos = np.array([0, 30, 60, 0.8, 10, .5]) + np.array([10, 5, 8, 0.2, 1, 0.1]) * np.random.randn(nwalkers, ndim)
     elif incl_mach == 1:
         if driver == 'ideal':
             ndim = 6
-            pos = np.array([0, 30, 60, 0.8, .5, 1.5]) + np.array([10,
-                                                                  5, 8, 0.2, .1, .5]) * np.random.randn(nwalkers, ndim)
+            pos = np.array([0, 30, 60, 0.8, .5, 1.5]) + np.array([10, 5, 8, 0.2, .1, .5]) * np.random.randn(nwalkers, ndim)
         elif driver == 'radiation':
             ndim = 7
-            pos = np.array([0, 30, 60, 0.8, 60, .5, 1.5]) + np.array([10,
-                                                                      5, 8, 0.2, 5, .1, .5]) * np.random.randn(nwalkers, ndim)
+            pos = np.array([0, 30, 60, 0.8, 60, .5, 1.5]) + np.array([10, 5, 8, 0.2, 5, .1, .5]) * np.random.randn(nwalkers, ndim)
         elif driver == 'hot':
             ndim = 7
-            pos = np.array([0, 30, 60, 0.8, 10, .5, 1.5]) + np.array([10,
-                                                                      5, 8, 0.2, 1, .1, .5]) * np.random.randn(nwalkers, ndim)
+            pos = np.array([0, 30, 60, 0.8, 10, .5, 1.5]) + np.array([10, 5, 8, 0.2, 1, .1, .5]) * np.random.randn(nwalkers, ndim)
 
 # save the chain in h5 file
-if line == 'CO_2_1' or line == 'HI':
-    filename = "%s/mk_chain/%s_%s/%s_%s_%s_%s_%s_%s_%s.h5" % (
-        mcmc_dat_dir, side, line, obj, side, line, driver, p, ex, fov)
+if line == 'CO_2_1':
+    filename = "%s/mk_chain/%s_%s/%s_%s_%s_%s_%s_%s.h5" % (
+        mcmc_dat_dir, side, line, obj, side, line, driver, p, ex)
+elif line == 'HI':
+    if fov== 'central':
+        filename = "%s/mk_chain/%s_%s/%s_%s_%s_%s_%s_%s.h5" % (mcmc_dat_dir, side, line, obj, side, line, driver, p, ex)
+    elif fov=='full':
+        filename = "%s/mk_chain/%s_%s_%s/%s_%s_%s_%s_%s_%s_%s.h5" % (mcmc_dat_dir, side, line, fov, obj, side, line, driver, p, ex, fov)
 elif line == 'Halpha':
     filename = "%s/mk_chain/%s_%s/%s_%s_%s_%s_%s_%s_c%.0f.h5" % (
         mcmc_dat_dir, side, line, obj, side, line, driver, p, ex, c_rho)
