@@ -47,6 +47,8 @@ Appendix:
 
 The test folder include the code used for debugging.
 
+In post_analysis folder, the file windshape.py generates figure 13, and windplot.py generates figures 14 and 15.
+
 
 
 
