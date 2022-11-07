@@ -3,10 +3,11 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from scipy.ndimage.interpolation import shift
 import emcee
+import os
+os.environ["DESPOTIC_HOME"] = '/data/ERCblackholes3/yuxuan/wind_obs/despotic'
 import sys
-mcmc_dir = '/Users/yuxuan/Desktop/'
-sys.path.append('/Users/yuxuan/Documents/research_module/despotic')
-sys.path.append('/Volumes/yyx_DISK/mcmc_code')
+mcmc_dir = '/data/ERCblackholes3/yuxuan/wind_obs'
+sys.path.append('/data/ERCblackholes3/yuxuan/wind_obs/multiphase-outflow-M82/mcmc_code')
 import wind_obs_diag_pkg as wodp
 v0 = 120e5*np.sqrt(2)
 incl_mach=1 #
@@ -27,7 +28,7 @@ def cal_v_sh(T_B_dat, spct):
 
 
 
-def read_chain(line, obj, side, dm, p, ex, c_rho=100, discard=100, thin=1, nwalkers=5, fov='central'):
+def read_chain(line, obj, side, dm, p, ex, c_rho=100, discard=100, thin=1, nwalkers=5, fov='central', verbose=False):
     #################################
     # post analysis on markov chain #
     #################################
@@ -38,13 +39,13 @@ def read_chain(line, obj, side, dm, p, ex, c_rho=100, discard=100, thin=1, nwalk
             filename='%s/mk_chain/%s_%s_full/%s_%s_%s_%s_%s_%s_full.h5'%(mcmc_dir, side, line, obj, side, line, dm, p, ex)
         if dm=='ideal':
             ndim=4
-            labels = [r"$\phi$", r"$\theta_{\mathrm{in}}$", r"$\theta_{\mathrm{out}}$",r"$\log\dot{M}$ [$M_\odot/{\rm yr}$]"]
+            labels = [r"$\phi$", r"$\theta_{\mathrm{in}}$", r"$\theta_{\mathrm{out}}$",r"$\log\dot{M}$"]
         elif dm=='radiation':
             ndim=5
-            labels = [r"$\phi$", r"$\theta_{\mathrm{in}}$", r"$\theta_{\mathrm{out}}$",r"$\log\dot{M}$ [$M_\odot/{\rm yr}$]", r'$\tau_0$']
+            labels = [r"$\phi$", r"$\theta_{\mathrm{in}}$", r"$\theta_{\mathrm{out}}$",r"$\log\dot{M}$", r'$\tau_0$']
         elif dm=='hot':
             ndim=5
-            labels = [r"$\phi$", r"$\theta_{\mathrm{in}}$", r"$\theta_{\mathrm{out}}$",r"$\log\dot{M}$ [$M_\odot/{\rm yr}$]", r'u$_h$']
+            labels = [r"$\phi$", r"$\theta_{\mathrm{in}}$", r"$\theta_{\mathrm{out}}$",r"$\log\dot{M}$", r'u$_h$']
     elif line=='Halpha':
         filename='%s/mk_chain/%s_%s/%s_%s_%s_%s_%s_%s_c%d.h5'%(mcmc_dir, side, line, obj, side, line, dm, p, ex, c_rho)
         if dm=='ideal':
@@ -73,7 +74,7 @@ def read_chain(line, obj, side, dm, p, ex, c_rho=100, discard=100, thin=1, nwalk
     flat_log_likelihood_samps = sampler.get_blobs(discard=discard, thin=thin, flat=True)['log_likelihood']
     print('read chain successfully')
 
-
+    
     # fit parameters that give the maximum likelihood
     idx = flat_log_likelihood_samps.argmax()
     print(idx)
@@ -100,10 +101,11 @@ def read_chain(line, obj, side, dm, p, ex, c_rho=100, discard=100, thin=1, nwalk
         fit_par[7] = flat_samples[idx, -1] # conversion parameter A
     fit_par_best = fit_par
 
-    if line=='CO_2_1' or line=='HI':
-        print('fitted parameter best (phi, theta_in, theta_out, lgmdot, tau_0, u_h, mdot, lgmach)', fit_par_best)
-    elif line=='Halpha':
-        print('fitted parameter best (phi, theta_in, theta_out, lgmdot, tau_0, u_h, mdot, A, lgmach)', fit_par_best)
+    if verbose==True:
+        if line=='CO_2_1' or line=='HI':
+            print('fitted parameter best (phi, theta_in, theta_out, lgmdot, tau_0, u_h, mdot, lgmach)', fit_par_best)
+        elif line=='Halpha':
+            print('fitted parameter best (phi, theta_in, theta_out, lgmdot, tau_0, u_h, mdot, A, lgmach)', fit_par_best)
 
     # medium of fitted parameters
     if line=='CO_2_1' or line=='HI':
@@ -136,18 +138,19 @@ def read_chain(line, obj, side, dm, p, ex, c_rho=100, discard=100, thin=1, nwalk
     elif incl_mach==0 and line=='Halpha':
         fit_par[7] = np.percentile(flat_samples[:, -1], 50) # conversion parameter A
     fit_par_med = fit_par
-    if line=='CO_2_1' or line=='HI':
-        print('fitted parameter medium (phi, theta_in, theta_out, lgmdot, tau_0, u_h, mdot, lgmach)', fit_par_med)
-    elif line=='Halpha':
-        print('fitted parameter medium (phi, theta_in, theta_out, lgmdot, tau_0, u_h, mdot, A, lgmach)', fit_par_med)
+    
+    if verbose==True:
+        if line=='CO_2_1' or line=='HI':
+            print('fitted parameter medium (phi, theta_in, theta_out, lgmdot, tau_0, u_h, mdot, lgmach)', fit_par_med)
+        elif line=='Halpha':
+            print('fitted parameter medium (phi, theta_in, theta_out, lgmdot, tau_0, u_h, mdot, A, lgmach)', fit_par_med)
 
     #with open('/home/yuxuan/wind_obs/post_analysis/%s_%s_best_fit_par.txt'%(side, line), 'ab') as f:
         #np.savetxt(f, [[dm, p, ex]], fmt='%5s', delimiter=',')
         #np.savetxt(f, [[phi, theta_in, theta_out, lg_mdot, tau0, uh]], fmt='%5f', delimiter=',')
 
 
-    # fitted parameters
-
+    # fitted parameters of walkers
     if line=='CO_2_1' or line=='HI':
         fit_par_w = np.zeros( (nwalkers, 8) )
     elif line=='Halpha':
@@ -170,10 +173,11 @@ def read_chain(line, obj, side, dm, p, ex, c_rho=100, discard=100, thin=1, nwalk
     elif incl_mach==0 and line=='Halpha':
         fit_par[:,7] = samples[-1, :nwalkers, -1] # conversion parameter A
     fit_par_w = np.transpose(fit_par_w)
-    if line=='CO_2_1' or line=='HI':
-        print('fitted parameter medium (phi, theta_in, theta_out, lgmdot, tau_0, u_h, mdot, lgmach)', fit_par_w)
-    elif line=='Halpha':
-        print('fitted parameter medium (phi, theta_in, theta_out, lgmdot, tau_0, u_h, mdot, A, lgmach)', fit_par_w)
+    if verbose==True:
+        if line=='CO_2_1' or line=='HI':
+            print('fitted parameter walkers (phi, theta_in, theta_out, lgmdot, tau_0, u_h, mdot, lgmach)', fit_par_w)
+        elif line=='Halpha':
+            print('fitted parameter walkers (phi, theta_in, theta_out, lgmdot, tau_0, u_h, mdot, A, lgmach)', fit_par_w)
     return ndim, labels, samples, flat_samples, log_likelihood_samps, fit_par_best, fit_par_med, fit_par_w
 
 

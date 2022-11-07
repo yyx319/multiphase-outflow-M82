@@ -6,10 +6,11 @@ Created on Mon Feb 24 07:52:04 2020
 @author: yuxuan
 """
 import os
+os.environ["DESPOTIC_HOME"] = '/data/ERCblackholes3/yuxuan/wind_obs/despotic'
 import sys
-dat_dir = '/home/yuxuan/wind_obs/wind_data'
-mcmc_dir = '/avatar/yuxuan/wind_obs/mcmc_dat/'
-sys.path.append('/avatar/yuxuan/research_module/despotic')
+dat_dir = '/data/ERCblackholes3/yuxuan/wind_obs/wind_data' # wind data dir
+mcmc_dir = '/data/ERCblackholes3/yuxuan/wind_obs' # mcmc dir
+sys.path.append('/data/ERCblackholes3/yuxuan/wind_obs/despotic') # despotic dir
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
@@ -450,7 +451,6 @@ def em_line_spec(line, mach, phi=5, theta_in=30, theta_out=50, pos_t=0, pos_a=1,
             return np.zeros((len(pos_a), len(u))), error
         elif hasattr(pos_a, "__len__") == False:
             return np.zeros(len(u)), error
-    print('Gamma', Gamma)
 
     tw = m0 / mdot
     ###################

@@ -11,10 +11,12 @@ Created on Thu Apr 30 11:19:24 2020
 #############################
 # modules import and set up #
 #############################
+import os
+os.environ["DESPOTIC_HOME"] = '/data/ERCblackholes3/yuxuan/wind_obs/despotic'
 import sys
-sys.path.append('/avatar/yuxuan/research_module/despotic')
-sys.path.append('/home/yuxuan/wind_obs/mcmc_code')
-mcmc_dat_dir = '/home/yuxuan/wind_obs/mcmc_dat'
+sys.path.append('/data/ERCblackholes3/yuxuan/wind_obs/despotic') # despotic dir
+sys.path.append('/data/ERCblackholes3/yuxuan/wind_obs/multiphase-outflow-M82/mcmc_code') # mcmc code dir
+mcmc_dat_dir = '/data/ERCblackholes3/yuxuan/wind_obs' # mcmc dir
 from contextlib import closing
 from multiprocessing import cpu_count
 from multiprocessing import Pool

@@ -3,10 +3,11 @@
 """
 Created on Wed May 13 23:13:32 2020
 @author: yuxuan
-python plot_pub.py HI north ideal point area best
+python plot_pub.py HI north ideal point area best central
+python plot_pub.py CO_2_1 north ideal point area best
 """
 import os
-os.environ["DESPOTIC_HOME"] = '/Volumes/yyx_DISK/despotic'
+os.environ["DESPOTIC_HOME"] = '/data/ERCblackholes3/yuxuan/wind_obs/despotic'
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
@@ -14,8 +15,8 @@ from scipy.ndimage.interpolation import shift
 import emcee
 import sys
 import plot_util as pu
-mcmc_dir = '/Users/yuxuan/Desktop/'
-sys.path.append('/Users/yuxuan/Desktop/mcmc_code')
+mcmc_dir = '/data/ERCblackholes3/yuxuan/wind_obs'
+sys.path.append('/data/ERCblackholes3/yuxuan/wind_obs/multiphase-outflow-M82/mcmc_code')
 import wind_obs_diag_pkg as wodp
 v0 = 120e5*np.sqrt(2)
 
@@ -37,16 +38,16 @@ else:
   fov='central'
 
 
-post_analysis_mk_chain=1
-comp_spct=1
-comp_moment=0
+post_analysis_mk_chain=0
+comp_spct=0
+comp_moment=1 
 
 
 cut_off_phi_l = 0
 cut_off_phi_u = 10
 alpha=0.6
 
-
+fontsize=25
 
 # read wind data
 if comp_spct==1 or comp_moment==1:
@@ -64,10 +65,6 @@ if comp_spct==1 or comp_moment==1:
     v_sm_edge = np.linspace(v_l,v_r,41)
   T_B_dat = spct_dat
   u = v*1e5/v0 # dimensionless velocity
-  print(pos_t, pos_a)
-  print(len(pos_a) )
-
-
 
 
 from matplotlib import rcParams
@@ -84,24 +81,22 @@ p = p_best
 ex = ex_best
 ndim, labels, samples, flat_samples, log_likelihood_samps, fit_par_best, fit_par_med, fit_par_w = pu.read_chain(line, obj, side, dm, p, ex, discard=discard, thin=1, nwalkers=nwalkers, fov=fov)
 phi_b, theta_in_b, theta_out_b, lg_mdot_b, tau0_b, uh_b, mdot_b, lg_mach_b = eval('fit_par_'+sel_pol)
-print('phi_b, theta_in_b, theta_out_b, lg_mdot_b, tau0_b, uh_b, mdot_b, lg_mach_b', phi_b, theta_in_b, theta_out_b, lg_mdot_b, tau0_b, uh_b, mdot_b, lg_mach_b)
 Gamma = wodp.cal_Gamma(lg_mdot_b, lg_mach_b)
-print('Gamma',Gamma)
 
 
 # make plots
-rcParams["font.size"] = 20
+rcParams["font.size"] = 25
 plt.rc('text',usetex=True)
-plt.rc('font', family='serif',size=20)
+plt.rc('font', family='serif',size=25)
 if post_analysis_mk_chain==1:
   print('analyse chain')
   # corner plot
   import corner
-  if line=='CO_2_1':
-    idx = np.where( (flat_samples[:,0]<95) & (flat_samples[:,0]>-95) &  (flat_samples[:,1]>25) )[0]
-  elif line=='HI':
-    # idx = np.where( (flat_samples[:,0]<10) & (flat_samples[:,0]>-10) &  (flat_samples[:,1]>45) & (flat_samples[:,2]>60) & (flat_samples[:,2]-flat_samples[:,1]>10) )[0]
-    idx = np.where( flat_samples[:,0]<20 )[0]
+  #if line=='CO_2_1':
+  #  idx = np.where( (flat_samples[:,0]<95) & (flat_samples[:,0]>-95) &  (flat_samples[:,1]>25) )[0]
+  #elif line=='HI':
+  #  # idx = np.where( (flat_samples[:,0]<10) & (flat_samples[:,0]>-10) &  (flat_samples[:,1]>45) & (flat_samples[:,2]>60) & (flat_samples[:,2]-flat_samples[:,1]>10) )[0]
+  #  idx = np.where( flat_samples[:,0]<90 )[0]
 
   fig, axes = plt.subplots(ndim, figsize=(10, 15), sharex=True)
   for i in range(ndim):
@@ -112,21 +107,19 @@ if post_analysis_mk_chain==1:
   axes[-1].set_xlabel("step number");
   fig.savefig('figure_pub/chain_%s_%s_%s_%s_%s.pdf'%(line, dm, p, ex, fov))
 
-  print(len(idx) )
-  flat_samples = flat_samples[idx,:]
+  #flat_samples = flat_samples[idx,:]
   #we are just fitting one atmosphere
   flat_samples[:,3] = flat_samples[:,3]-np.log10(2.)
-  print(np.shape(flat_samples) )
   if dm=='ideal':
-    fig = corner.corner(flat_samples, labels=labels, range=[(-90.,90.), (0.,90.), (0., 90.), (-1, 2), (0,2)], fontsize=18)
+    fig = corner.corner(flat_samples, labels=labels, range=[(-90.,90.), (0.,90.), (0., 90.), (-1, 2), (0,2)], max_n_ticks=3)
   elif dm=='radiation':
-    fig = corner.corner(flat_samples, labels=labels, range=[(-90.,90.), (0.,90.), (0., 90.), (-1, 2), (20, 100), (0, 2)], fontsize=18)
+    fig = corner.corner(flat_samples, labels=labels, range=[(-90.,90.), (0.,90.), (0., 90.), (-1, 2), (20, 100), (0, 2)], max_n_ticks=3)
   elif dm=='hot':
-    #fig = corner.corner(flat_samples, labels=labels, range=[(-90.,90.), (0.,90.), (0., 90.), (-1, 2), (5, 20), (0,2)], fontsize=18)
-    fig = corner.corner(flat_samples, labels=labels, range=[(-30.,30.), (0.,60.), (40., 90.), (-1, 2), (5, 20), (0,2)], fontsize=18)
+    fig = corner.corner(flat_samples, labels=labels, range=[(-90.,90.), (0.,90.), (0., 90.), (-1, 2), (5, 20), (0,2)], max_n_ticks=3)
+    #fig = corner.corner(flat_samples, labels=labels, range=[(-30.,30.), (0.,60.), (40., 90.), (-1, 2), (5, 20), (0,2)], fontsize=18)
 
   #fig.subplots_adjust(wspace=0, hspace=0)
-  #fig.subplots_adjust(left=0.05, right=0.95,bottom=0.05, top=0.95)
+  fig.subplots_adjust(left=0.1, right=0.98,bottom=0.1, top=0.98)
   #plt.rc('text', usetex=True)
   #plt.rc('font', family='serif',size=20)
   fig.savefig('figure_pub/corner_%s_%s_%s_%s_%s.pdf'%(line, dm, p, ex, fov))
@@ -152,15 +145,14 @@ elif line=='HI' and fov=='full':
 ##################################
 # compare observation and theory #
 ##################################
-# choose 20 walkers
-# compare spectra
+
+
 if comp_spct==1:
   # example spectrum
   u = v*1e5/v0 # dimensionless velocity
   dm = dm_best
   p = p_best
   ex = ex_best
-  print(p,ex)
   phi_b, theta_in_b, theta_out_b, lg_mdot_b, tau0_b, uh_b, mdot_b = eval('fit_par_'+sel_pol)[:7]
   phi_a, theta_in_a, theta_out_a, lg_mdot_a, tau0_a, uh_a, mdot_a = fit_par_w[:7]
   if incl_mach==1:
@@ -176,6 +168,8 @@ if comp_spct==1:
     elif line=='HI':
       mach_b = 7.4
       mach_a = [7.4]*15
+        
+  
   ###########
   # walkers #
   ###########
@@ -192,7 +186,6 @@ if comp_spct==1:
         continue
       else:
         k = (i-1)%ncol; j = int( (i-1-k)/ncol )
-        print(j,k)
 
     # observation
     axs[j][k].fill_between(v, T_B_dat[i]-sigma_spct, T_B_dat[i]+sigma_spct, color = 'grey', alpha=0.5, label = r'(%.1f, %.1f)'%(p_t, p_a))
@@ -210,32 +203,37 @@ if comp_spct==1:
         axs[j][k].plot(v, shift(spct, [v_sh], cval=0.), 'orange', linewidth='1.5', alpha=alpha)
 
     if k==0:
-        axs[j][k].set_ylabel('$T_B$ [K]', fontsize=20);
+        axs[j][k].set_ylabel('$T_B$ [K]', fontsize=fontsize);
     if j==nrow-1:
-        axs[j][k].set_xlabel('$v$ [km s$^{-1}$]', fontsize=20);
-    axs[j][k].legend(fontsize=16)
-    axs[j][k].tick_params(axis="x", labelsize=20)
-    axs[j][k].tick_params(axis="y", labelsize=20)
+        axs[j][k].set_xlabel('$v$ [km s$^{-1}$]', fontsize=fontsize);
+    axs[j][k].legend(loc='upper right' ,fontsize=22)
+    axs[j][k].set_xticks([-100, 0, 100])
+    axs[j][k].tick_params(axis="x", labelsize=fontsize)
+    axs[j][k].tick_params(axis="y", labelsize=fontsize)
 
     if line=='CO_2_1':
         axs[j][k].axis([-220,220,0, 0.22])
     elif line=='HI':
         axs[j][k].axis([-180,180,0,10.])
-  plt.subplots_adjust(left=0.05, right=0.99,bottom=0.08, top=0.99)
-  plt.savefig('figure_pub/%s_spec_comp.pdf'%(line))
+  plt.subplots_adjust(left=0.03, right=0.99,bottom=0.04, top=0.99)
+  plt.savefig('figure_pub/%s_spec_comp_%s.pdf'%(line, fov))
 
+    
   plt.figure()
-  print('vel shift array', v_sh_a)
   # map of velocity shift
-  plt.scatter(pos_t, pos_a, c=v_sh_a, cmap="bwr")
+  if line=='HI' and fov=='full':
+    plt.scatter(pos_t[1:], pos_a[1:], c=v_sh_a, cmap="bwr")
+  else:
+    plt.scatter(pos_t, pos_a, c=v_sh_a, cmap="bwr")
   plt.xlabel('x [kpc]'); plt.ylabel('y [kpc]')
   cb = plt.colorbar()
   cb.set_label(r'vel shift [km/s]')
   plt.savefig('figure_pub/v_sh_map_%s.pdf'%fov)
 
-
-
-  # parameter study
+  
+  ###################
+  # parameter study #
+  ###################
   fig, axs = plt.subplots(3,5, figsize=(20., 12.), sharex=True, sharey=True, tight_layout=True, gridspec_kw = {'wspace':0., 'hspace':0.})
   for i, p_t, p_a in zip(range(len(pos_a)), pos_t, pos_a):
     if line=='CO_2_1':
@@ -275,27 +273,28 @@ if comp_spct==1:
     axs[j][k].plot(v, shift(spct2, [v_sh2], cval=0.), ls=ls, lw=3 , alpha=alpha)
     axs[j][k].plot(v, shift(spct3, [v_sh3], cval=0.), ls=ls, lw=3 , alpha=alpha)
     if k==0:
-        axs[j][k].set_ylabel('$T_B$ [K]', fontsize=20);
+        axs[j][k].set_ylabel('$T_B$ [K]', fontsize=fontsize);
     if j==2:
-        axs[j][k].set_xlabel('$v$ [km/s]', fontsize=20);
-    axs[j][k].legend(fontsize=16)
-    axs[j][k].tick_params(axis="x", labelsize=20)
-    axs[j][k].tick_params(axis="y", labelsize=20)
+        axs[j][k].set_xlabel('$v$ [km/s]', fontsize=fontsize);
+    axs[j][k].legend(fontsize=22)
+    axs[j][k].tick_params(axis="x", labelsize=fontsize)
+    axs[j][k].tick_params(axis="y", labelsize=fontsize)
     if line=='CO_2_1':
         axs[j][k].axis([-220,220,0,0.2])
     elif line=='HI':
         axs[j][k].axis([-180,180,0,10])
-  axs[0][4].legend(fontsize=18)
+  axs[0][4].legend(fontsize=fontsize)
   plt.subplots_adjust(left=0.05, right=0.99,bottom=0.08, top=0.99)
   #plt.rc('text', usetex=True)
   #plt.rc('font', family='serif',size=20)
   plt.savefig('figure_pub/%s_spec_comp_par.pdf'%(line))
 
-
-  ###########
-  # potential and expansion law
-  ###########
-  print('compare p and ex law')
+  
+  ###############################
+  # potential and expansion law #
+  ###############################
+  print('\n\n\n')
+  print('Compare different potential and expansion law \n')
   fig, axs = plt.subplots(3,5, figsize=(20., 12.), sharex=True, sharey=True, tight_layout=True, gridspec_kw = {'wspace':0., 'hspace':0.})
   # example spectrum
   u = v*1e5/v0 #dimensionless velocity
@@ -303,7 +302,6 @@ if comp_spct==1:
   for p in pot_a:
     for ex in ex_a:
       ndim, labels, samples, flat_samples, log_likelihood_samps, fit_par_best, fit_par_med, fit_par_w = pu.read_chain(line, obj, side, dm, p, ex, discard=discard, thin=1, nwalkers=nwalkers)
-      print('parameter',eval('fit_par_'+sel_pol) )
       phi, theta_in, theta_out, lg_mdot, tau0, uh, mdot = eval('fit_par_'+sel_pol)[:7]
       if incl_mach==1:
         lg_mach=eval('fit_par_'+sel_pol)[-1]
@@ -335,9 +333,9 @@ if comp_spct==1:
             axs[j][k].set_ylabel('$T_B$ [K]');
         if j==nrow-1:
             axs[j][k].set_xlabel('$v$ [km/s]');
-        axs[j][k].legend(fontsize=16)
-        axs[j][k].tick_params(axis="x", labelsize=15)
-        axs[j][k].tick_params(axis="y", labelsize=15)
+        axs[j][k].legend(fontsize=22)
+        axs[j][k].tick_params(axis="x", labelsize=fontsize)
+        axs[j][k].tick_params(axis="y", labelsize=fontsize)
 
         if line=='CO_2_1':
             axs[j][k].axis([-220,220,0,0.2])
@@ -347,8 +345,11 @@ if comp_spct==1:
   plt.subplots_adjust(left=0.05, right=0.99,bottom=0.08, top=0.99)
   plt.savefig('figure_pub/%s_spec_comp_p_ex.pdf'%(line) )
 
-
-  # driving mechanism
+  
+  '''
+  #####################
+  # driving mechanism #
+  #####################
   fig, axs = plt.subplots(3,5, figsize=(20., 12.), sharex=True, sharey=True, tight_layout=True, gridspec_kw = {'wspace':0., 'hspace':0.})
   p = p_best
   ex = ex_best
@@ -397,9 +398,10 @@ if comp_spct==1:
   plt.subplots_adjust(left=0.05, right=0.99,bottom=0.08, top=0.99)
   plt.savefig('figure_pub/%s_spec_comp_dm.pdf'%(line))
   
+  '''
 
 
-
+fontsize=16
 ######################
 # compare moment map #
 ######################
@@ -473,37 +475,37 @@ if comp_moment==1:
   p0=axs[0][0].imshow(m0, origin='lower',  extent=extent,
              vmin=vmin, vmax=vmax)
   cb0 = fig.colorbar(p0, ax = axs[0][0], shrink=0.6)
-  cb0.set_label('Intensity [K km/s]',size=15)
+  cb0.set_label('Intensity [K km/s]',size=fontsize)
   axs[0][0].axis(extent)
 
   p0=axs[0][1].imshow(m0_despotic, origin='lower', extent=extent, vmin=vmin, vmax=vmax)
   cb0 = fig.colorbar(p0, ax = axs[0][1], shrink=0.6)
-  cb0.set_label('Intensity [K km/s]',size=15)
+  cb0.set_label('Intensity [K km/s]',size=fontsize)
   idx = np.where(z2<sp_r)[0]
   axs[0][1].plot(x[idx], z1[idx], 'k', x[idx], z2[idx], 'k',-x[idx], z1[idx], 'k', -x[idx], z2[idx], 'k')
   axs[0][1].axis(extent)
 
   p0=axs[0][2].imshow((m0-m0_despotic)/m0, origin='lower', extent=extent, cmap='bwr', vmin=-1., vmax=1.)
   cb0 = fig.colorbar(p0, ax = axs[0][2], shrink=0.6)
-  cb0.set_label('residue/observed',size=15)
+  cb0.set_label('residue/observed',size=fontsize)
   axs[0][2].plot(x[idx], z1[idx], 'k', x[idx], z2[idx], 'k',-x[idx], z1[idx], 'k', -x[idx], z2[idx], 'k')
   axs[0][2].axis(extent)
 
   #CO_2_1_m2[CO_2_1_m2>100]=np.nan
   p2=axs[1][0].imshow(m2, origin='lower', extent=extent,  vmin=10, vmax=120 )
   cb2 = fig.colorbar(p2, ax = axs[1][0], shrink=0.6)
-  cb2.set_label('linewidth [km/s]',size=12)
+  cb2.set_label('linewidth [km/s]',size=fontsize)
   axs[1][0].axis(extent)
 
   p2=axs[1][1].imshow(m2_despotic, origin='lower', extent=extent,  vmin=10, vmax=120)
   cb2 = fig.colorbar(p2, ax =axs[1][1], shrink=0.6)
-  cb2.set_label('linewidth [km/s]',size=12)
+  cb2.set_label('linewidth [km/s]',size=fontsize)
   axs[1][1].plot(x[idx], z1[idx], 'k', x[idx], z2[idx], 'k',-x[idx], z1[idx], 'k', -x[idx], z2[idx], 'k')
   axs[1][1].axis(extent)
 
   p2=axs[1][2].imshow( (m2-m2_despotic)/np.sqrt(m2**2 + sigma_spct), origin='lower', extent=extent, cmap='bwr', vmin=-1., vmax=1.)
   cb2 = fig.colorbar(p2, ax =axs[1][2], shrink=0.6)
-  cb2.set_label(r'residue/observed',size=12)
+  cb2.set_label(r'residue/observed',size=fontsize)
   axs[1][2].plot(x[idx], z1[idx], 'k', x[idx], z2[idx], 'k',-x[idx], z1[idx], 'k', -x[idx], z2[idx], 'k')
 
   axs[1][2].axis(extent)
@@ -520,11 +522,4 @@ if comp_moment==1:
 
   plt.subplots_adjust(left=0.05, right=0.95, bottom=0.1, top=0.95)
   plt.savefig('figure_pub/%s_moment_obs_t.pdf'%line)
-'''
-(model - data) / sqrt(data^2 + sigma^2)
-sigma(I)^2 = Delta v^2 Sum_i sigma_i^2
-sigma(I) = Delta v * sqrt[ Sum_i sigma_i^2 ]
-I = Delta v * Sum_i T_i
-|model - data| / sqrt(data^2 + sigma^2)
-(model - data) / sqrt(data^2 + sigma^2)
-'''
+
